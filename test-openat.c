@@ -16,7 +16,11 @@ int main(int argc, char **argv)
 	int noti_fd = -1; pid_t pid = 0;
 	scmp_filter_ctx ctx;
 
-	BIND_CPU(0);
+	ret = bind_cpu(1);
+	if (ret) {
+		fprintf(stderr, "bind_cpu(1) failed\n");
+		goto out;
+	}
 
 	ctx = seccomp_init(SCMP_ACT_LOG);
 	if (!ctx) {
@@ -60,7 +64,7 @@ int main(int argc, char **argv)
 			goto out;
 		}
 
-		for (i = -NUM_WARMUP; i < num_runs; i++) {
+		for (i = -NUM_WARMUP; i < NUM_RUNS; i++) {
 			ret = seccomp_notify_receive(noti_fd, req);
 			if (ret) {
 				perror("seccomp_notify_receive failed");
@@ -93,8 +97,11 @@ if (i >= 0)
 	}
 	else if (!pid) {
 #endif
-
-	BIND_CPU(1);
+	ret = bind_cpu(2);
+	if (ret) {
+		fprintf(stderr, "bind_cpu(2) failed\n");
+		goto out;
+	}
 
 	int fd = -1;
 	char *filename = "/dev/null";
@@ -113,7 +120,7 @@ if (i >= 0)
 		close(fd);
 	}
 
-	for (i = 0; i < num_runs; i++) {
+	for (i = 0; i < NUM_RUNS; i++) {
 #ifdef MEASURE_NOTIFY
 fprintf(stderr, "RUN %d: start %ld\n", i, tick_time());
 #else

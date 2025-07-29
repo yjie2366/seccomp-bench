@@ -15,18 +15,10 @@
 #include "tsc.h"
 
 static uint64_t hz = 0;
-static int num_runs = 1000;
 static double *time_each = NULL;
 
 #define NUM_WARMUP 10
-
-#define BIND_CPU(c) do {\
-	int ret; cpu_set_t set;\
-	CPU_ZERO(&set); CPU_SET(c, &set);\
-	fprintf(stderr, "Bind to CPU %d\n", c);\
-	ret = sched_setaffinity(getpid(), sizeof(set), &set);\
-	if (ret == -1) { perror("sched_setaffinity failed: "); return -1; }\
-} while (0)
+#define NUM_RUNS 10000
 
 #define CREATE_SECCOMP_RULE(_ctx, ac, s, ...) do {\
 	ret = seccomp_rule_add(_ctx, ac, SCMP_SYS(s), ##__VA_ARGS__);\
@@ -37,18 +29,28 @@ static double *time_each = NULL;
 	}\
 } while (0)
 
-static inline int init_bench(int argc, char **argv) {
-//	int cpu = 0; // default
+static inline int bind_cpu(int cpu)
+{
+	int ret = 0; cpu_set_t set;
 
-	/* TODO: need to check error here */
-//	if (argc > 1) {
-//		cpu = strtol(argv[1], NULL, 10);
-//	}
-//	BIND_CPU(cpu);
+	CPU_ZERO(&set);
+	CPU_SET(cpu, &set);
 
+	fprintf(stderr, "Bind to CPU %d\n", cpu);
+
+	ret = sched_setaffinity(getpid(), sizeof(set), &set);
+	if (ret == -1) {
+		perror("sched_setaffinity failed: ");
+		return -1;
+	}
+	return 0;
+}
+
+static inline int init_bench(int argc, char **argv)
+{
 	hz = tick_helz(0);
 
-	time_each = calloc(num_runs, sizeof(double));
+	time_each = calloc(NUM_RUNS, sizeof(double));
 	if (!time_each) {
 		perror("calloc() failed: ");
 		return -1;
@@ -66,10 +68,10 @@ static inline double average_time(void)
 	int i;
 	double total = 0.0;
 
-	for (i = 0; i < num_runs; i++) {
+	for (i = 0; i < NUM_RUNS; i++) {
 		total += time_each[i];	
 	}
-	return total/num_runs;
+	return total/NUM_RUNS;
 }
 
 #endif

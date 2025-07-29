@@ -6,7 +6,7 @@ SECCOMP_LIB = -lseccomp
 
 .PHONY: all clean
 
-all: $(BIN_ORG) $(BIN_SEC)
+all: $(BIN_ORG) $(BIN_SEC) openat_notify
 
 %_org: test-%.c
 	gcc $(CFLAGS) $^ -o $@ 

@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 		uid = syscall(__NR_getuid);
 	}
 
-	for (i = 0; i < num_runs; i++) {
+	for (i = 0; i < NUM_RUNS; i++) {
 		st = tick_time();
 		uid = syscall(__NR_getuid);
 		end = tick_time();

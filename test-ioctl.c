@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 		}
 	}
 
-	for (i = 0; i < num_runs; i++) {
+	for (i = 0; i < NUM_RUNS; i++) {
 		st = tick_time();
 
 		ret = syscall(__NR_ioctl, fd, VIDIOC_QUERYCAP, &cap);
