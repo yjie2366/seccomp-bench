@@ -18,6 +18,8 @@ static uint64_t hz = 0;
 static int num_runs = 1000;
 static double *time_each = NULL;
 
+#define NUM_WARMUP 10
+
 #define BIND_CPU(c) do {\
 	int ret; cpu_set_t set;\
 	CPU_ZERO(&set); CPU_SET(c, &set);\
@@ -26,14 +28,23 @@ static double *time_each = NULL;
 	if (ret == -1) { perror("sched_setaffinity failed: "); return -1; }\
 } while (0)
 
+#define CREATE_SECCOMP_RULE(_ctx, ac, s, ...) do {\
+	ret = seccomp_rule_add(_ctx, ac, SCMP_SYS(s), ##__VA_ARGS__);\
+	if (ret) {\
+		fprintf(stderr, "ERROR: add rule for syscall: %s (%s)\n", \
+			#s, strerror(errno));\
+		goto out;\
+	}\
+} while (0)
+
 static inline int init_bench(int argc, char **argv) {
-	int cpu = 0; // default
+//	int cpu = 0; // default
 
 	/* TODO: need to check error here */
-	if (argc > 1) {
-		cpu = strtol(argv[1], NULL, 10);
-	}
-	BIND_CPU(cpu);
+//	if (argc > 1) {
+//		cpu = strtol(argv[1], NULL, 10);
+//	}
+//	BIND_CPU(cpu);
 
 	hz = tick_helz(0);
 

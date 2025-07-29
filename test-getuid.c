@@ -21,26 +21,9 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(getuid), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "getuid");
-		goto out;
-	}
-
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "write");
-		goto out;
-	}
-
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "exit_group");
-		goto out;
-	}
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, getuid, 0);
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, write, 0);
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, exit_group, 0);
 
 	ret = seccomp_load(ctx);
 	if (ret) {
@@ -53,8 +36,8 @@ int main(int argc, char **argv)
 	uint64_t st = 0, end = 0;
 
 	// warmup
-	for (i = 0; i < 10; i++) {
-		uid = getuid();
+	for (i = 0; i < NUM_WARMUP; i++) {
+		uid = syscall(__NR_getuid);
 	}
 
 	for (i = 0; i < num_runs; i++) {

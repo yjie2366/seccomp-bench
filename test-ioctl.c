@@ -32,34 +32,12 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(ioctl), 1,
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, ioctl, 2,
+		SCMP_A0(SCMP_CMP_EQ, fd),
 		SCMP_A1(SCMP_CMP_EQ, VIDIOC_QUERYCAP));
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "ioctl");
-		goto out;
-	}
-
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(write), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "write");
-		goto out;
-	}
-
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(close), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "close");
-		goto out;
-	}
-
-	ret = seccomp_rule_add(ctx, SCMP_ACT_ALLOW, SCMP_SYS(exit_group), 0);
-	if (ret) {
-		fprintf(stderr, "Failed to add rule: %s for syscall: %s\n",
-			strerror(errno), "exit_group");
-		goto out;
-	}
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, write, 0);
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, close, 0);
+	CREATE_SECCOMP_RULE(ctx, SCMP_ACT_ALLOW, exit_group, 0);
 
 	ret = seccomp_load(ctx);
 	if (ret) {
@@ -72,7 +50,7 @@ int main(int argc, char **argv)
 	uint64_t st = 0, end = 0;
 
 	// warmup
-	for (i = 0; i < 10; i++) {
+	for (i = 0; i < NUM_WARMUP; i++) {
 		ret = syscall(__NR_ioctl, fd, VIDIOC_QUERYCAP, &cap);
 		if (ret == -1) {
 			perror("ioctl failed:");
